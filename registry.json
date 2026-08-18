@@ -1,0 +1,96 @@
+{
+  "version": "0.1.0-dev.0",
+  "sources": [
+    {
+      "id": "ubuntu.official",
+      "trust": "core"
+    },
+    {
+      "id": "fedora.official",
+      "trust": "core"
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "build.cmake",
+      "aliases": [
+        "cmake"
+      ],
+      "mappings": {
+        "ubuntu": {
+          "apt": {
+            "package": "cmake",
+            "source": "ubuntu.official"
+          }
+        },
+        "fedora": {
+          "dnf": {
+            "package": "cmake",
+            "source": "fedora.official"
+          }
+        }
+      }
+    },
+    {
+      "id": "media.ffmpeg",
+      "aliases": [
+        "ffmpeg"
+      ],
+      "mappings": {
+        "ubuntu": {
+          "apt": {
+            "package": "ffmpeg",
+            "source": "ubuntu.official"
+          }
+        },
+        "fedora": {
+          "dnf": {
+            "package": "ffmpeg",
+            "source": "fedora.official"
+          }
+        }
+      }
+    },
+    {
+      "id": "audio.alsa.development",
+      "aliases": [
+        "alsa-dev",
+        "alsa-devel"
+      ],
+      "mappings": {
+        "ubuntu": {
+          "apt": {
+            "package": "libasound2-dev",
+            "source": "ubuntu.official"
+          }
+        },
+        "fedora": {
+          "dnf": {
+            "package": "alsa-lib-devel",
+            "source": "fedora.official"
+          }
+        }
+      }
+    },
+    {
+      "id": "crypto.openssl.development",
+      "aliases": [
+        "openssl-dev"
+      ],
+      "mappings": {
+        "ubuntu": {
+          "apt": {
+            "package": "libssl-dev",
+            "source": "ubuntu.official"
+          }
+        },
+        "fedora": {
+          "dnf": {
+            "package": "openssl-devel",
+            "source": "fedora.official"
+          }
+        }
+      }
+    }
+  ]
+}
