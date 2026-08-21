@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.0-dev.0",
   "schemaVersion": "0.1.0",
   "registryFile": "registry.json",
   "digest": {
@@ -10,6 +10,6 @@
     "required": true,
     "algorithm": "ed25519",
     "keyId": "captain.registry.root.v1",
-    "signature": "mDcfbSHOg3iLUBxivowk3Mher8HJh29Jxsir4ZBYgeioUSF2HujzHo1MKol4dSKhoTfDBssI8RZrtxJIROhkDg=="
+    "signature": "C3mj0+jxiWxHhLqZJ6NLtDeOhuIDYDz9za1IlfhYJY8MumwWuWyFdtSyDNvrvPY9C6B/6vbtxxmyLvs75EMCDw=="
   }
 }

@@ -9,6 +9,12 @@ const releasePath = resolve(root, "registry.release.json");
 
 const registry = await readFile(registryPath);
 
+const registryJson = JSON.parse(
+    registry.toString("utf8")
+);
+
+
+
 const digest = createHash("sha256")
   .update(registry)
   .digest("hex");
@@ -16,6 +22,9 @@ const digest = createHash("sha256")
 const release = JSON.parse(
   await readFile(releasePath, "utf8")
 );
+
+release.version =
+    registryJson.version;
 
 release.digest = {
   algorithm: "sha256",
