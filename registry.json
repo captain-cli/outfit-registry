@@ -71,6 +71,18 @@
     },
 
     {
+      "id": "utility.sl",
+      "mappings": [
+        {
+          "platform": "ubuntu",
+          "packageManager": "apt",
+          "package": "sl",
+          "source": "ubuntu.official"
+        }
+      ]
+    },
+
+    {
       "id": "audio.alsa.development",
       "aliases": [
         "alsa-dev",
