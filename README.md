@@ -1,5 +1,7 @@
 # Captain Outfit Registry
-
+<p align="center">
+    <img src="./assets/captain-outfit-registry.png" alt="Captain - Captain's Outfit Registry" width="100%" />
+</p>
 > Signed dependency identities and trusted platform mappings for Captain Outfit.
 
 Captain Outfit Registry is the trust and resolution layer behind **Captain Outfit**.
