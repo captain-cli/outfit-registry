@@ -50,6 +50,89 @@
     },
 
     {
+      "id": "compiler.cpp",
+      "aliases": [
+        "cpp-compiler",
+        "c++-compiler"
+      ],
+      "mappings": [
+        {
+          "platform": "ubuntu",
+          "packageManager": "apt",
+          "package": "g++",
+          "source": "ubuntu.official"
+        },
+        {
+          "platform": "fedora",
+          "packageManager": "dnf",
+          "package": "gcc-c++",
+          "source": "fedora.official"
+        }
+      ]
+    },
+
+    {
+      "id": "library.boost.system",
+      "aliases": [
+        "boost-system"
+      ],
+      "mappings": [
+        {
+          "platform": "ubuntu",
+          "packageManager": "apt",
+          "package": "libboost-system-dev",
+          "source": "ubuntu.official"
+        },
+        {
+          "platform": "fedora",
+          "packageManager": "dnf",
+          "package": "boost-devel",
+          "source": "fedora.official"
+        }
+      ]
+    },
+    {
+      "id": "library.boost.thread",
+      "aliases": [
+        "boost-thread"
+      ],
+      "mappings": [
+        {
+          "platform": "ubuntu",
+          "packageManager": "apt",
+          "package": "libboost-thread-dev",
+          "source": "ubuntu.official"
+        },
+        {
+          "platform": "fedora",
+          "packageManager": "dnf",
+          "package": "boost-devel",
+          "source": "fedora.official"
+        }
+      ]
+    },
+    {
+      "id": "library.mariadb.dev",
+      "aliases": [
+        "mariadb-dev",
+        "mariadb-devel"
+      ],
+      "mappings": [
+        {
+          "platform": "ubuntu",
+          "packageManager": "apt",
+          "package": "libmariadb-dev",
+          "source": "ubuntu.official"
+        },
+        {
+          "platform": "fedora",
+          "packageManager": "dnf",
+          "package": "mariadb-connector-c-devel",
+          "source": "fedora.official"
+        }
+      ]
+    },
+    {
       "id": "media.ffmpeg",
       "aliases": [
         "ffmpeg"

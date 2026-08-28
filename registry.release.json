@@ -4,12 +4,12 @@
   "registryFile": "registry.json",
   "digest": {
     "algorithm": "sha256",
-    "value": "a1379a73a48a59759e6d3342024dbc118cebf55394cfad02d2d06fa734890dbc"
+    "value": "a813be3ba26483e64a8a15023465192b5a69c5b8ae078251fd6ba0cc178e734e"
   },
   "signing": {
     "required": true,
     "algorithm": "ed25519",
     "keyId": "captain.registry.root.v1",
-    "signature": "YDoJVJ/G8fGuMGMiIM2ixf0AH1M0+hokYXkGYJ39bes5tWOXapD812SqjHago8/Wz/EjkHI5yE/a2mn0b5QeBw=="
+    "signature": "fctOco80G5FY7LZEKwloFlFOjqbHCLn4KNBaPM+LTYymof+dGuLQnVIyomTQjdbY+ybg3oyL8UXQySZx7PmODw=="
   }
 }
