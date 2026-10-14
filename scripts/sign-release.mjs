@@ -44,6 +44,7 @@ release.signing = {
     required: true,
     algorithm: "ed25519",
     keyId:
+        process.env.OUTFIT_REGISTRY_KEY_ID ??
         "captain.registry.root.v1"
 };
 

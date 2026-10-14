@@ -135,7 +135,7 @@ test(
         const publicKey =
             await readFile(
                 resolve(
-                    "trust/captain.registry.root.v1.pem"
+                    `trust/${release.signing.keyId}.pem`
                 ),
                 "utf8"
             );
@@ -153,7 +153,7 @@ test(
 
         assert.equal(
             result.keyId,
-            "captain.registry.root.v1"
+            release.signing.keyId
         );
     }
 );

@@ -1,6 +1,5 @@
 {
   "version": "0.1.0-dev.0",
-
   "sources": [
     {
       "id": "ubuntu.official",
@@ -26,7 +25,6 @@
       ]
     }
   ],
-
   "dependencies": [
     {
       "id": "build.cmake",
@@ -48,7 +46,6 @@
         }
       ]
     },
-
     {
       "id": "compiler.cpp",
       "aliases": [
@@ -70,7 +67,6 @@
         }
       ]
     },
-
     {
       "id": "library.boost.system",
       "aliases": [
@@ -152,7 +148,6 @@
         }
       ]
     },
-
     {
       "id": "utility.sl",
       "mappings": [
@@ -164,7 +159,6 @@
         }
       ]
     },
-
     {
       "id": "audio.alsa.development",
       "aliases": [
@@ -186,7 +180,6 @@
         }
       ]
     },
-
     {
       "id": "crypto.openssl.development",
       "aliases": [
@@ -203,6 +196,27 @@
           "platform": "fedora",
           "packageManager": "dnf",
           "package": "openssl-devel",
+          "source": "fedora.official"
+        }
+      ]
+    },
+    {
+      "id": "library.nlohmann.json",
+      "aliases": [
+        "nlohmann-json",
+        "json-modern-cpp"
+      ],
+      "mappings": [
+        {
+          "platform": "ubuntu",
+          "packageManager": "apt",
+          "package": "nlohmann-json3-dev",
+          "source": "ubuntu.official"
+        },
+        {
+          "platform": "fedora",
+          "packageManager": "dnf",
+          "package": "json-devel",
           "source": "fedora.official"
         }
       ]
