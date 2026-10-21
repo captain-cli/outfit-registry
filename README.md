@@ -1,76 +1,58 @@
 # Captain Outfit Registry
+
 <p align="center">
-    <img src="./assets/captain-outfit-registry.png" alt="Captain - Captain's Outfit Registry" width="100%" />
+  <img src="./assets/outfit-registry-banner.png" alt="Captain Outfit Registry — Every cargo manifest must be trusted" width="100%" />
 </p>
-> Signed dependency identities and trusted platform mappings for Captain Outfit.
 
-Captain Outfit Registry is the trust and resolution layer behind **Captain Outfit**.
+**Every cargo manifest must be trusted.**
 
-It defines the relationship between a logical dependency requested by an application and the native package that is authorized to satisfy that requirement on a particular platform.
+Captain Outfit Registry is the **signed catalog of dependency identities, platform mappings, and authorized package sources** used by [Captain Outfit](https://github.com/captain-cli/outfit).
 
-The core principle is simple:
+> **In one sentence:** Applications declare *what they need*; the Registry identifies *which native package and source are trusted*; Outfit decides *whether an approved installation may proceed*.
 
-**Applications declare capabilities. The registry defines trusted implementations.**
+**Status:** Active development. The demonstrated trusted integration path uses Ubuntu and APT. Other platforms and package managers are not yet claimed as fully supported.
+
+## How it works
 
 ```text
-Application
-    │
-    │ requires
-    ▼
-"utility.sl"
-    │
-    ▼
-┌─────────────────────────────┐
-│   Captain Outfit Registry   │
-│                             │
-│   Identity                  │
-│   Platform Mapping          │
-│   Package Manager           │
-│   Package                   │
-│   Authorized Source         │
-└──────────────┬──────────────┘
-               │
-               ▼
-        Ubuntu + APT
-               │
-               ▼
-              sl
-               │
-               ▼
-       ubuntu.official
+Application: "utility.sl"
+        ↓
+Signed registry + trusted host key
+        ↓
+Canonical identity: utility.sl
+        ↓
+Ubuntu / APT → package: sl → source: ubuntu.official
+        ↓
+Outfit plan → review → approve → apply → verify → receipt
 ```
 
-The application never needs to know that the native package is named `sl`, that APT provides it, or which source is authorized to supply it.
+Think of Outfit as the crew loading a ship. The Registry is the **authorized cargo manifest**: it identifies what each container is, where it may come from, and whether the manifest itself is authentic.
 
-Those decisions belong to the trusted registry.
+## Quick start: verify the registry safely
 
----
-
-# Why a Registry?
-
-A traditional application dependency declaration might eventually become something like:
+**Prerequisite:** Node.js. The commands below run local tests and **do not install OS packages, generate keys, or modify signed releases**.
 
 ```bash
-sudo apt install sl
+git clone https://github.com/captain-cli/outfit-registry.git
+cd outfit-registry
+node --test tests/*.test.mjs
 ```
 
-That creates a direct relationship between application-controlled configuration and privileged package installation.
+The test suite checks registry digests, modified-content detection, Ed25519 signatures, tampered releases, verification against a tracked public key, and deterministic signing payloads.
 
-Captain deliberately breaks that relationship.
+For the companion installation-planning CLI, see [Captain Outfit](https://github.com/captain-cli/outfit). Cloning this repository alone does **not** configure a host to trust its signing keys.
 
-Instead, an application declares:
+## Your first dependency mapping
+
+An application requests a **logical identity**, not an operating-system command:
 
 ```json
 {
-  "requires": [
-    "utility.sl"
-  ]
+  "requires": ["utility.sl"]
 }
 ```
 
-The registry determines whether that dependency exists and how it may be resolved.
-
-For example:
+The registry can define its authorized implementation:
 
 ```json
 {
@@ -86,585 +68,80 @@ For example:
 }
 ```
 
-This separates:
+This is an illustrative dependency entry; the complete catalog and its source declarations live in [`registry.json`](./registry.json). The actual data must conform to [`schemas/registry.schema.json`](./schemas/registry.schema.json).
+
+**The application cannot replace `utility.sl` with an arbitrary `sudo apt install` command.** The registry controls dependency identity, platform implementation, and source authorization.
+
+## What's in this repository?
+
+| Path | Purpose |
+| --- | --- |
+| [`registry.json`](./registry.json) | Canonical dependencies, platform mappings, and sources |
+| [`registry.release.json`](./registry.release.json) | Digest and signed release metadata |
+| [`schemas/registry.schema.json`](./schemas/registry.schema.json) | Registry data contract |
+| [`trust/`](./trust/) | Public verification keys; **not** private signing keys |
+| [`docs/TRUST_MODEL.md`](./docs/TRUST_MODEL.md) | Detailed trust and security architecture |
+| [`scripts/`](./scripts/) | Key generation, release generation, and signing tools |
+| [`tests/`](./tests/) | Integrity, signature, and signing-payload tests |
+
+## Trust model
+
+The Registry is security-sensitive because changing a mapping changes which native package Outfit might install with elevated privileges.
 
 ```text
-APPLICATION INTENT
-        │
-        ▼
-DEPENDENCY IDENTITY
-        │
-        ▼
-PLATFORM IMPLEMENTATION
-        │
-        ▼
-AUTHORIZED SOURCE
+registry.json ── SHA-256 digest ──┐
+                                  ├── registry.release.json
+Release metadata ── Ed25519 ─────┘             │
+                                               ▼
+                                  Host-installed trusted public key
+                                               │
+                                               ▼
+                                      Trusted resolution
 ```
 
-The application controls the first.
+The host, **not the registry directory**, establishes the root of trust. Outfit uses trusted signing keys installed under `/etc/captain/outfit/trust/` to verify releases. Merely pointing Outfit at a directory does not make it trustworthy.
 
-The trusted registry controls the rest.
+Verification is designed to **fail closed** for missing or invalid signatures, mismatched digests, unknown or untrusted keys, unknown dependency identities, missing platform mappings, and unauthorized source combinations.
 
----
+For a full explanation of trust boundaries, key identities, and verification, read [`docs/TRUST_MODEL.md`](./docs/TRUST_MODEL.md).
 
-# Registry Responsibilities
+## How releases are made
 
-Captain Outfit Registry provides four primary guarantees.
-
-## Identity
-
-Dependencies receive stable canonical identities.
-
-```text
-utility.sl
-```
-
-An identity represents a logical dependency independently of the package name used by any individual operating system.
-
-Aliases may resolve to canonical identities, but resolution ultimately produces a known registry dependency.
-
-Unknown dependencies are rejected.
-
-## Platform Mapping
-
-A canonical dependency may have different implementations on different platforms.
-
-Conceptually:
-
-```text
-dependency.foo
-      │
-      ├── Ubuntu / apt  → foo
-      ├── Fedora / dnf  → foo
-      └── future OS     → another-package
-```
-
-The application does not need platform-specific installation logic.
-
-That knowledge belongs to the registry.
-
-## Source Authorization
-
-Package mappings reference registered sources.
-
-A source is not implicitly trusted simply because a package manager can reach it.
-
-Mappings determine which source is authorized for a particular dependency and environment.
-
-Outfit rejects mappings attempting to use a source outside its authorized platform or package-manager constraints.
-
-## Release Authenticity
-
-Registry contents are distributed with cryptographically protected release metadata.
-
-A registry release must pass both integrity and authenticity verification before Outfit trusts its mappings.
-
----
-
-# Trust Model
-
-The registry is treated as security-sensitive configuration.
-
-Changing:
-
-```text
-utility.foo → package A
-```
-
-to:
-
-```text
-utility.foo → package B
-```
-
-changes what privileged software Outfit may install.
-
-Registry modification is therefore not treated as ordinary configuration drift.
-
-Captain protects registry releases through:
-
-```text
-registry.json
-     │
-     │ SHA-256
-     ▼
-registry.release.json
-     │
-     │ Ed25519 signature
-     ▼
-Trusted Signing Key
-     │
-     ▼
-Host Trust Anchor
-```
-
-The host establishes the root of trust.
-
-The registry does not establish trust in itself.
-
----
-
-# Signed Releases
-
-The repository contains release tooling for generating and signing registry metadata.
-
-Generate release metadata:
+The repository includes tooling to regenerate metadata and sign a release:
 
 ```bash
 node scripts/generate-release.mjs
-```
-
-This calculates the SHA-256 digest of the registry and updates:
-
-```text
-registry.release.json
-```
-
-Sign the release:
-
-```bash
 node scripts/sign-release.mjs
 ```
 
-The release metadata is signed using Ed25519.
+**Maintainer workflow only:** These commands are **not** part of the safe Quick Start. They may update tracked release metadata and require appropriately protected signing credentials. Review their implementation and key handling before running them. Never commit private keys, secrets, or signing credentials.
 
-A valid release therefore proves two separate properties:
+A release binds the exact registry bytes to their SHA-256 digest and authenticates the release metadata with Ed25519. Integrity alone is insufficient: a digest is not proof that a change was authorized.
 
-```text
-SHA-256
-   │
-   └── Is this exactly the registry content
-       described by the release?
+### Proposing a new dependency
 
-Ed25519
-   │
-   └── Was this release authorized by a
-       trusted signing key?
-```
+1. Propose a stable, descriptive logical identity and explain the capability it represents.
+2. Identify the supported platform, native package manager, native package, and authorized source.
+3. Validate the data against the schema and run the test suite.
+4. Submit the proposed mapping for maintainer review.
+5. **Do not** treat a proposed mapping as trusted until an authorized maintainer has produced a signed release and the consuming host trusts its signing key.
 
-Both checks matter.
+A mapping change is not a signing authorization. Registry contributors should not need access to private signing keys.
 
-Integrity without authenticity would allow an attacker to replace both the registry and its digest.
+## Why approval remains necessary
 
-Authenticity without content verification would fail to bind the signature to the exact registry being consumed.
+A valid signed registry answers **what may satisfy a requirement**. It does **not** automatically authorize installing that package on a particular host.
 
----
+[Outfit](https://github.com/captain-cli/outfit) separately resolves the trusted dependency, previews the native transaction, fingerprints the effective plan, requests explicit approval, revalidates before execution, verifies the resulting state, and writes a receipt.
 
-# Host Trust
+If a mapping changes after approval, the original approval does **not** authorize the new resolution. Outfit must produce a new plan and receive new approval.
 
-Captain Outfit maintains trusted registry signing keys on the host.
+## Current scope
 
-The current trust location is:
+The repository establishes the signed-registry trust path demonstrated with Outfit's Ubuntu/APT backend. Canonical dependency identities are designed to support additional platforms over time, but a conceptual mapping is not a claim of production-ready execution support.
 
-```text
-/etc/captain/outfit/trust/
-```
+## Captain ecosystem
 
-For example:
+**[Outfit Registry](https://github.com/captain-cli/outfit-registry)** identifies and authenticates approved dependency mappings. **[Outfit](https://github.com/captain-cli/outfit)** plans, approves, and executes authorized host dependency operations. They intentionally remain separate.
 
-```text
-/etc/captain/outfit/trust/captain.registry.root.v1.pem
-```
-
-The trust relationship therefore looks like:
-
-```text
-HOST
- │
- └── trusts
-      │
-      ▼
-captain.registry.root.v1
-      │
-      └── verifies
-           │
-           ▼
-     registry release
-           │
-           └── authenticates
-                │
-                ▼
-           registry.json
-```
-
-Supplying a registry directory to Outfit does **not** make that registry trusted.
-
-The release must chain back to key material already trusted by the host.
-
----
-
-# Failure Is the Default
-
-Registry validation is intentionally fail-closed.
-
-Outfit rejects a registry when it encounters conditions such as:
-
-```text
-Modified registry content
-Missing release metadata
-Unsupported digest algorithm
-Missing release signature
-Unknown signing-key ID
-Invalid signing-key ID
-Untrusted signing-key material
-Modified signed release metadata
-Unknown dependency
-Missing platform mapping
-Unauthorized source/platform combination
-Unauthorized source/package-manager combination
-```
-
-Resolution succeeds only after the required trust relationships have been established.
-
----
-
-# Dependency Resolution
-
-Given a request:
-
-```text
-utility.sl
-```
-
-and a host:
-
-```text
-Platform:        ubuntu
-Package Manager: apt
-```
-
-the registry can resolve:
-
-```text
-Requirement:      utility.sl
-Canonical ID:     utility.sl
-Platform:         ubuntu
-Package Manager:  apt
-Package:          sl
-Source:           ubuntu.official
-Registry Version: 0.1.0-dev.0
-```
-
-That resolution becomes part of Outfit's installation plan.
-
-The plan is subsequently fingerprinted and explicitly approved.
-
-Changing the registry mapping after approval therefore changes the reconstructed plan and causes Outfit to reject the operation.
-
-```text
-REGISTRY
-   │
-   ▼
-RESOLUTION
-   │
-   ▼
-PLAN
-   │
-   ▼
-FINGERPRINT
-   │
-   ▼
-APPROVAL
-```
-
-This binds registry resolution to the trusted apply lifecycle rather than treating dependency resolution as an unrelated lookup.
-
----
-
-# Registry Changes After Approval
-
-Consider an approved mapping:
-
-```text
-utility.foo
-    ↓
-package: foo
-source: ubuntu.official
-```
-
-If the registry later changes it to:
-
-```text
-utility.foo
-    ↓
-package: foo-ng
-source: another.source
-```
-
-the existing approval does **not** authorize the new mapping.
-
-Outfit reconstructs the current plan and compares it with the approved state.
-
-The operation is rejected.
-
-The user must generate and approve a new plan.
-
-This is an important distinction:
-
-> **Approval follows the resolved dependency state, not merely the dependency name.**
-
----
-
-# Registry Structure
-
-The registry currently contains dependency definitions and their platform-specific mappings.
-
-A dependency resembles:
-
-```json
-{
-  "id": "utility.sl",
-  "mappings": [
-    {
-      "platform": "ubuntu",
-      "packageManager": "apt",
-      "package": "sl",
-      "source": "ubuntu.official"
-    }
-  ]
-}
-```
-
-Mappings associate a canonical dependency with:
-
-```text
-platform
-package manager
-native package
-authorized source
-```
-
-The registry also maintains the source information required to determine whether a mapping is permitted for a particular environment.
-
----
-
-# Canonical Dependencies
-
-Canonical dependency IDs deliberately separate application requirements from native package naming.
-
-Instead of embedding:
-
-```text
-apt:sl
-dnf:some-package
-pacman:another-package
-```
-
-into application manifests, Captain applications can depend on stable identities:
-
-```text
-utility.sl
-database.postgresql
-runtime.node
-media.ffmpeg
-```
-
-As additional platforms are introduced, the canonical identity can remain stable while its mappings evolve.
-
-```text
-                  dependency.foo
-                        │
-             ┌──────────┼──────────┐
-             ▼          ▼          ▼
-          Ubuntu      Fedora     Future OS
-             │          │          │
-            apt        dnf        ...
-             │          │          │
-          package A  package B  package C
-```
-
-This gives the Captain ecosystem a dependency vocabulary independent of any single operating system.
-
----
-
-# Security Boundaries
-
-The registry is deliberately constrained.
-
-### A dependency must exist
-
-Arbitrary package names are not equivalent to registered dependencies.
-
-### A mapping must exist for the host
-
-A valid dependency on one platform does not imply authorization on another.
-
-### A source must be registered
-
-Dependency mappings cannot introduce arbitrary package sources.
-
-### A source must be authorized for the environment
-
-Platform and package-manager restrictions are enforced.
-
-### Registry contents must match their release metadata
-
-Modified content fails SHA-256 verification.
-
-### Release metadata must be signed
-
-Unsigned or improperly signed releases are rejected.
-
-### The signing key must be trusted by the host
-
-A mathematically valid signature from an unknown key does not establish trust.
-
----
-
-# Development
-
-Requires Node.js.
-
-Run the registry test suite:
-
-```bash
-node --test tests/*.test.mjs
-```
-
-Generate release metadata:
-
-```bash
-node scripts/generate-release.mjs
-```
-
-Sign the release:
-
-```bash
-node scripts/sign-release.mjs
-```
-
-Run the complete release workflow:
-
-```bash
-node scripts/generate-release.mjs &&
-node scripts/sign-release.mjs &&
-node --test tests/*.test.mjs
-```
-
-The current tests cover:
-
-- registry digest verification,
-- modified registry detection,
-- Ed25519 signature verification,
-- tampered release detection,
-- tracked release verification,
-- deterministic signing payload generation, and
-- exclusion of the signature value from its own signing payload.
-
----
-
-# Relationship to Captain Outfit
-
-The registry does **not** install packages.
-
-Captain Outfit does **not** allow applications to define arbitrary trusted mappings.
-
-The responsibilities are intentionally separated.
-
-```text
-┌────────────────────────────┐
-│ Captain Outfit Registry    │
-│                            │
-│ What dependency is this?   │
-│ What package satisfies it? │
-│ Which source is allowed?   │
-│ Is this release trusted?   │
-└─────────────┬──────────────┘
-              │
-              │ trusted resolution
-              ▼
-┌────────────────────────────┐
-│ Captain Outfit             │
-│                            │
-│ What does this host need?  │
-│ What will change?          │
-│ Was that plan approved?    │
-│ Is it still the same?      │
-│ May it execute?            │
-│ Did it succeed?            │
-└────────────────────────────┘
-```
-
-Together they establish the boundary:
-
-```text
-Application
-    │
-    │ "I need this."
-    ▼
-Registry
-    │
-    │ "This is the trusted implementation."
-    ▼
-Outfit
-    │
-    │ "This is the exact approved operation."
-    ▼
-Privileged Helper
-    │
-    │ "The operation still matches."
-    ▼
-Package Manager
-```
-
----
-
-# Design Philosophy
-
-The Registry exists because **dependency identity and package installation are not the same thing**.
-
-An application should not need to know:
-
-```text
-which Linux distribution it is running on
-which native package manager is present
-what the operating-system package is called
-which package source is trusted
-how privileged installation should occur
-```
-
-It should be able to say:
-
-> **I require this capability.**
-
-The registry translates that requirement into a trusted platform-specific identity.
-
-Outfit decides whether that resolution may cross the privilege boundary.
-
-This separation allows dependency knowledge to evolve independently from application code while preserving explicit trust.
-
----
-
-# Project Status
-
-Captain Outfit Registry is currently under active development.
-
-The current implementation establishes the first complete trust path for the Ubuntu/APT Outfit backend, including:
-
-```text
-canonical dependency
-        ↓
-platform mapping
-        ↓
-authorized source
-        ↓
-SHA-256 release integrity
-        ↓
-Ed25519 signature
-        ↓
-host trust anchor
-        ↓
-Outfit resolution
-        ↓
-approved installation plan
-```
-
-Additional dependency identities, platforms, package managers, source policies, and registry-management capabilities will be introduced as the Captain ecosystem expands.
-
----
-
-## Captain
-
-**Outfit Registry** is part of the Captain toolchain: infrastructure tooling built around explicit contracts, controlled trust boundaries, reproducible operations, and inspectable system state.
-
-**One registry. Verified content. Trusted everywhere.**
+**One registry. Verified content. Trusted dependencies.**
